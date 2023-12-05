@@ -1,4 +1,4 @@
-import { FormatShapes } from "@mui/icons-material";
+//import { FormatShapes } from "@mui/icons-material";
 import { useEffect, useMemo, useState } from "react";
 
 export const useForm = (initialForm = {}, formValidations = {} ) => {
@@ -10,6 +10,12 @@ export const useForm = (initialForm = {}, formValidations = {} ) => {
         createValidators();
     }, [ formState ] )
     
+
+    useEffect(() => {
+      setFormState( initialForm );
+    }, [initialForm])
+    
+
     const isFormValid = useMemo( () => {
         for (const formValue of Object.keys( formValidation )) {
             
