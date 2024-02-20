@@ -1,7 +1,17 @@
-import { collection, doc, setDoc } from "firebase/firestore/lite";
+import { collection, deleteDoc, doc, setDoc } from "firebase/firestore/lite";
 import { FirebaseDB } from "../../firebase/config";
-import { addNewEmptyNote, savingNewNote, setActiveNote, setNotes, setSaving, updateNote } from "./journalSlice";
+import { 
+    addNewEmptyNote, 
+    savingNewNote, 
+    setActiveNote, 
+    setNotes, 
+    setPhotosToActiveNote, 
+    setSaving, 
+    updateNote, 
+    deleteNoteById 
+} from "./journalSlice";
 import { loadNotes } from "../../helpers/loadNotes";
+import { fileUpload } from "../../helpers/fileUpload";
 
 export const startNewNote = () =>{
     return async( dispatch, getState ) => {
@@ -45,7 +55,7 @@ export const startSaveNote = () => {
 
         const noteToFireStore = {...note};
         delete noteToFireStore.id;
-        delete noteToFireStore.imageUrls;
+        // delete noteToFireStore.imageUrls;
         console.log({note})
         const docRef = doc( FirebaseDB,  uid, 'journal', 'notes', note.id);
 
@@ -53,6 +63,35 @@ export const startSaveNote = () => {
         await setDoc(docRef, noteToFireStore)
         noteToFireStore.id = note.id
         dispatch( updateNote(noteToFireStore));
+
+    }
+}
+
+export const startUploadingFiles = ( files= []) => {
+    return async (dispatch) =>{
+        dispatch( setSaving() );
+        
+        const fileUploadPromises = [];
+
+        for (const file of files) {
+            fileUploadPromises.push( fileUpload(file) );
+        }
+
+        const photosUrls = await Promise.all( fileUploadPromises );
+        console.log(photosUrls);
+        dispatch( setPhotosToActiveNote( photosUrls ) );
+    }
+}
+
+export const startDeletingNote = () => {
+    return async(dispatch, getSate) =>{
+        const { uid } = getSate().auth;
+        const { active: note } = getSate().journal;
+
+        const docRef = doc( FirebaseDB,  uid, 'journal', 'notes', note.id);
+        await deleteDoc(docRef);
+
+        dispatch( deleteNoteById(note.id) );
 
     }
 }
